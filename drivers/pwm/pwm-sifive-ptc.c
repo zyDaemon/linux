@@ -11,6 +11,7 @@
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/pwm.h>
+#include <linux/reset.h>
 
 #include <dt-bindings/pwm/pwm.h>
 
@@ -174,6 +175,7 @@ static int sifive_pwm_ptc_probe(struct platform_device *pdev)
 	struct device_node *node = pdev->dev.of_node;
 	struct sifive_pwm_ptc_device *pwm;
 	struct pwm_chip *chip;
+	struct reset_control *rst;
 	int ret;
 
 	pwm = devm_kzalloc(dev, sizeof(*pwm), GFP_KERNEL);
@@ -215,6 +217,14 @@ static int sifive_pwm_ptc_probe(struct platform_device *pdev)
 	ret = devm_add_action_or_reset(dev, sifive_pwm_ptc_disable_action, pwm->clk);
 	if (ret)
 		return ret;
+
+	rst = devm_reset_control_get_exclusive(dev, NULL);
+	if (IS_ERR(rst))
+		return dev_err_probe(dev, PTR_ERR(rst), "Unable to get reset\n");
+
+	ret = reset_control_deassert(rst);
+	if (ret)
+		return dev_err_probe(dev, ret, "Unable to deassert reset\n");
 
 	/*
 	 * after pwmchip_add it will show up as /sys/class/pwm/pwmchip0,
