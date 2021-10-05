@@ -202,26 +202,22 @@ static int sifive_pwm_ptc_probe(struct platform_device *pdev)
 
 	/* get IO base address */
 	pwm->regs = devm_platform_ioremap_resource(pdev, 0);
-	if (IS_ERR(pwm->regs)) {
-		dev_err(dev, "Unable to map IO resources\n");
-		return PTR_ERR(pwm->regs);
-	}
+	if (IS_ERR(pwm->regs))
+		return dev_err_probe(dev, PTR_ERR(pwm->regs),
+				     "Unable to map IO resources\n");
 
 	pwm->clk = devm_clk_get(dev, NULL);
-	if (IS_ERR(pwm->clk)) {
-		dev_err(dev, "Unable to find controller clock\n");
-		return PTR_ERR(pwm->clk);
-	}
+	if (IS_ERR(pwm->clk))
+		return dev_err_probe(dev, PTR_ERR(pwm->clk),
+				     "Unable to get controller clock\n");
 
 	/*
 	 * after pwmchip_add it will show up as /sys/class/pwm/pwmchip0,
 	 * 0 is chip->base, pwm0 can be seen after running echo 0 > export
 	 */
 	ret = pwmchip_add(chip);
-	if (ret) {
-		dev_err(dev, "cannot register PTC: %d\n", ret);
-		return ret;
-	}
+	if (ret)
+		return dev_err_probe(dev, ret, "cannot register PTC: %d\n", ret);
 
 	dev_dbg(dev, "SiFive PWM PTC chip registered %d PWMs\n", chip->npwm);
 	return 0;
