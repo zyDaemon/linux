@@ -163,6 +163,11 @@ static const struct pwm_ops sifive_pwm_ptc_ops = {
 	.owner		= THIS_MODULE,
 };
 
+static void sifive_pwm_ptc_disable_action(void *data)
+{
+	clk_disable_unprepare(data);
+}
+
 static int sifive_pwm_ptc_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -202,6 +207,14 @@ static int sifive_pwm_ptc_probe(struct platform_device *pdev)
 	if (IS_ERR(pwm->clk))
 		return dev_err_probe(dev, PTR_ERR(pwm->clk),
 				     "Unable to get controller clock\n");
+
+	ret = clk_prepare_enable(pwm->clk);
+	if (ret)
+		return dev_err_probe(dev, ret, "Unable to enable clock\n");
+
+	ret = devm_add_action_or_reset(dev, sifive_pwm_ptc_disable_action, pwm->clk);
+	if (ret)
+		return ret;
 
 	/*
 	 * after pwmchip_add it will show up as /sys/class/pwm/pwmchip0,
