@@ -44,8 +44,6 @@ struct sifive_pwm_ptc_device {
 	struct pwm_chip	chip;
 	struct clk	*clk;
 	void __iomem	*regs;
-	/* apb clock frequency , from dts */
-	u32		approx_period;
 };
 
 static inline struct sifive_pwm_ptc_device *chip_to_sifive_ptc(struct pwm_chip *c)
@@ -66,7 +64,7 @@ static void sifive_pwm_ptc_get_state(struct pwm_chip *chip, struct pwm_device *d
 	data_hrc = ioread32(REG_PTC_RPTC_HRC(pwm->regs, dev->hwpwm));
 
 	/* how many ns does apb clock elapse */
-	pwm_clk_ns = NS_1 / pwm->approx_period;
+	pwm_clk_ns = NS_1 / clk_get_rate(pwm->clk);
 
 	/* pwm period(ns) */
 	state->period     = data_lrc * pwm_clk_ns;
@@ -110,10 +108,9 @@ static int sifive_pwm_ptc_apply(struct pwm_chip *chip, struct pwm_device *dev,
 		return -EINVAL;
 
 	/* calculate pwm real period (ns) */
-	pwm_clk_ns = NS_1 / pwm->approx_period;
+	pwm_clk_ns = NS_1 / clk_get_rate(pwm->clk);
 
-	dev_dbg(pwm->chip.dev, "approx_period:%u,pwm_clk_ns:%u\n",
-		pwm->approx_period, pwm_clk_ns);
+	dev_dbg(pwm->chip.dev, "pwm_clk_ns:%u\n", pwm_clk_ns);
 
 	/* calculate period count */
 	period_data = state->period / pwm_clk_ns;
@@ -194,11 +191,6 @@ static int sifive_pwm_ptc_probe(struct platform_device *pdev)
 		chip->npwm = MAX_PWM;
 
 	dev_dbg(dev, "%s: npwm:0x%x\n", __func__, chip->npwm);
-
-	/* get apb clock frequency */
-	ret = of_property_read_u32(node, "sifive,approx-period", &pwm->approx_period);
-
-	dev_dbg(dev, "%s: approx_period:%u\n", __func__, pwm->approx_period);
 
 	/* get IO base address */
 	pwm->regs = devm_platform_ioremap_resource(pdev, 0);
