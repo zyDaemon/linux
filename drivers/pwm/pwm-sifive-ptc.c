@@ -172,7 +172,6 @@ static int sifive_pwm_ptc_probe(struct platform_device *pdev)
 	struct device_node *node = pdev->dev.of_node;
 	struct sifive_pwm_ptc_device *pwm;
 	struct pwm_chip *chip;
-	struct resource *res;
 	int ret;
 
 	pwm = devm_kzalloc(dev, sizeof(*pwm), GFP_KERNEL);
@@ -202,17 +201,11 @@ static int sifive_pwm_ptc_probe(struct platform_device *pdev)
 	dev_dbg(dev, "%s: approx_period:%u\n", __func__, pwm->approx_period);
 
 	/* get IO base address */
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-
-	dev_dbg(dev, "%s: res start:0x%llx,end:0x%llx\n", __func__, res->start, res->end);
-
-	pwm->regs = devm_ioremap_resource(dev, res);
+	pwm->regs = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(pwm->regs)) {
 		dev_err(dev, "Unable to map IO resources\n");
 		return PTR_ERR(pwm->regs);
 	}
-
-	dev_dbg(dev, "%s: regs:%p\n", __func__, pwm->regs);
 
 	pwm->clk = devm_clk_get(dev, NULL);
 	if (IS_ERR(pwm->clk)) {
