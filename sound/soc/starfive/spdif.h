@@ -142,9 +142,9 @@ void sf_spdif_pcm_push_tx(struct sf_spdif_dev *dev);
 void sf_spdif_pcm_pop_rx(struct sf_spdif_dev *dev);
 int sf_spdif_pcm_register(struct platform_device *pdev);
 #else
-void sf_spdif_pcm_push_tx(struct sf_spdif_dev *dev) { }
-void sf_spdif_pcm_pop_rx(struct sf_spdif_dev *dev) { }
-int sf_spdif_pcm_register(struct platform_device *pdev)
+static inline void sf_spdif_pcm_push_tx(struct sf_spdif_dev *dev) { }
+static inline void sf_spdif_pcm_pop_rx(struct sf_spdif_dev *dev) { }
+static inline int sf_spdif_pcm_register(struct platform_device *pdev)
 {
 	return -EINVAL;
 }

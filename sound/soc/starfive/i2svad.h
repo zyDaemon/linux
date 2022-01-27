@@ -235,9 +235,9 @@ void i2svad_pcm_push_tx(struct i2svad_dev *dev);
 void i2svad_pcm_pop_rx(struct i2svad_dev *dev);
 int i2svad_pcm_register(struct platform_device *pdev);
 #else
-void i2svad_pcm_push_tx(struct i2svad_dev *dev) { }
-void i2svad_pcm_pop_rx(struct i2svad_dev *dev) { }
-int i2svad_pcm_register(struct platform_device *pdev)
+static inline void i2svad_pcm_push_tx(struct i2svad_dev *dev) { }
+static inline void i2svad_pcm_pop_rx(struct i2svad_dev *dev) { }
+static inline int i2svad_pcm_register(struct platform_device *pdev)
 {
 	return -EINVAL;
 }
