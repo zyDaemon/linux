@@ -207,19 +207,11 @@ static int sifive_pwm_ptc_probe(struct platform_device *pdev)
 	 * after pwmchip_add it will show up as /sys/class/pwm/pwmchip0,
 	 * 0 is chip->base, pwm0 can be seen after running echo 0 > export
 	 */
-	ret = pwmchip_add(chip);
+	ret = devm_pwmchip_add(dev, chip);
 	if (ret)
 		return dev_err_probe(dev, ret, "cannot register PTC: %d\n", ret);
 
 	dev_dbg(dev, "SiFive PWM PTC chip registered %d PWMs\n", chip->npwm);
-	return 0;
-}
-
-static int sifive_pwm_ptc_remove(struct platform_device *pdev)
-{
-	struct sifive_pwm_ptc_device *pwm = platform_get_drvdata(pdev);
-
-	pwmchip_remove(&pwm->chip);
 	return 0;
 }
 
@@ -232,7 +224,6 @@ MODULE_DEVICE_TABLE(of, sifive_pwm_ptc_of_match);
 
 static struct platform_driver sifive_pwm_ptc_driver = {
 	.probe = sifive_pwm_ptc_probe,
-	.remove = sifive_pwm_ptc_remove,
 	.driver = {
 		.name = "pwm-sifive-ptc",
 		.of_match_table = sifive_pwm_ptc_of_match,
