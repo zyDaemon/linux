@@ -8,6 +8,7 @@
 
 #include <linux/clk.h>
 #include <linux/io.h>
+#include <linux/math64.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/pwm.h>
@@ -114,14 +115,14 @@ static int sifive_pwm_ptc_apply(struct pwm_chip *chip, struct pwm_device *dev,
 	dev_dbg(pwm->chip.dev, "pwm_clk_ns:%u\n", pwm_clk_ns);
 
 	/* calculate period count */
-	period_data = state->period / pwm_clk_ns;
+	period_data = div_u64(state->period, pwm_clk_ns);
 
 	if (!state->enabled)
 		/* if disabled, just set duty_data to 0, which means low level always */
 		duty_data = 0;
 	else
 		/* calculate duty count */
-		duty_data = state->duty_cycle / pwm_clk_ns;
+		duty_data = div_u64(state->duty_cycle, pwm_clk_ns);
 
 	dev_dbg(pwm->chip.dev, "period_data:%u, duty_data:%u\n",
 		period_data, duty_data);
